@@ -1,33 +1,25 @@
 import sqlite3
-import controller.stock_controller as stock_controller
-import controller.confidence_controller as confidence_controller
-import controller.view_controller as view_controller
+from controller.confidence_controller import ConfidenceController
+from controller.view_controller import ViewController
+from controller.stock_controller import StockController
+from controller.database import Database, DatabaseType
 
 
-def create_user(user_id: str):
-    insert_person(user_id)
+class UserController(Database):
+    def __init__(self):
+        super().__init__('database/database_network.db', DatabaseType.sqlite)
+        self.stock_controller = StockController()
+        self.confidence_controller = ConfidenceController()
+        self.view_controller = ViewController()
 
+    def create_user(self, user_id: str):
+        super().inserter(table='users', cols=['user_id'], vals=[user_id])
 
-def remove_user(user_id: str):
-    delete_person(user_id)
-    stock_controller.remove_user(user_id)
-    view_controller.delete_person(user_id, 'pq_view')
-    view_controller.delete_person(user_id, 'absolute_view')
-    confidence_controller.delete_person(user_id, 'interval')
-    confidence_controller.delete_person(user_id, 'confidences')
+    def remove_user(self, user_id: str):
+        super().deleter(table='users', cols=['user_id'], vals=[user_id])
+        self.stock_controller.remove_user(user_id)
 
-
-def insert_person(user_id: str):
-    conn = sqlite3.connect('database/database_network.db')
-    c = conn.cursor()
-    c.execute("INSERT INTO users (user_id) VALUES (?)", (user_id,))
-    conn.commit()
-    conn.close()
-
-
-def delete_person(user_id: str):
-    conn = sqlite3.connect('database/database_network.db')
-    c = conn.cursor()
-    c.execute("DELETE FROM users WHERE user_id = ?", (user_id,))
-    conn.commit()
-    conn.close()
+        self.view_controller.delete_person(user_id, 'pq_view')
+        self.view_controller.delete_person(user_id, 'absolute_view')
+        self.confidence_controller.delete_person(user_id, 'interval')
+        self.confidence_controller.delete_person(user_id, 'confidences')

@@ -1,8 +1,8 @@
 import configparser
 import warnings
 
-import controller.user_controller as user_controller
-import controller.stock_controller as stock_controller
+from controller.user_controller import UserController
+from controller.stock_controller import StockController
 import controller.view_controller as view_controller
 import controller.confidence_controller as confidence_controller
 
@@ -64,6 +64,7 @@ def handle_message(event):
     res = {
         'msg': "指令無效"
     }
+    stock_controller = StockController()
     if "@指令清單" in event.message.text:
         commands = ["@指令清單：", "@關注清單", "\t@關注清單+", "\t@關注清單-", "@觀點矩陣", "\t@觀點矩陣-絕對",
                     "\t@觀點矩陣-相對"]
@@ -130,19 +131,21 @@ def handle_message(event):
 
 @handler.add(FollowEvent)
 def handle_follow(event):
+    user_controller = UserController()
     user_controller.create_user(event.source.user_id)
     with ApiClient(configuration) as api_client:
         line_bot_api = MessagingApi(api_client)
         line_bot_api.reply_message_with_http_info(
             ReplyMessageRequest(
                 reply_token=event.reply_token,
-                messages=[TextMessage(text="測試測試")]
+                messages=[TextMessage(text='歡迎加入資產配置小幫手')]
             )
         )
 
 
 @handler.add(UnfollowEvent)
 def handle_follow(event):
+    user_controller = UserController()
     user_controller.remove_user(event.source.user_id)
 
 
