@@ -16,8 +16,9 @@ class ConfidenceController(Database):
 
         try:
             if super().selector(table='confidences', cols=['user_id'], vals=[user_id]):
+                print(confidence)
                 super().updater(
-                    table='confidence', cols=['user_id'],
+                    table='confidences', cols=['user_id'],
                     vals=[user_id], u_cols=['confidence'], u_vals=[confidence]
                 )
             else:
@@ -30,11 +31,11 @@ class ConfidenceController(Database):
         return {'msg': '置信矩陣更新成功'}
 
     def read_confidences(self, user_id: str) -> dict:
-        confidences = super().selector(table='confidences', cols=['user_id'], vals=[user_id])
+        confidences = super().selector(table='confidences', cols=['user_id'], vals=[user_id])[0]
         if not confidences:
             return {'msg': '尚未設定置信矩陣'}
         elif confidences:
-            return {'msg': json.dumps(confidences['confidences'], ensure_ascii=False).replace("\\", '')}
+            return {'msg': json.dumps(confidences['confidence'], ensure_ascii=False).replace("\\", '')}
 
     def create_interval(self, user_id: str, confidence: str) -> dict:
         try:

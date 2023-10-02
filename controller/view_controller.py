@@ -22,7 +22,7 @@ class ViewController(Database):
         except Exception as e:
             return {'msg': '資料庫寫入失敗'}
 
-        super().deleter(table='absolute_view', cols=['user_id'], vals=[user_id])
+        super().deleter(table='pq_view', cols=['user_id'], vals=[user_id])
         return {'msg': '絕對-觀點矩陣更新成功'}
 
     def create_pq_view(self, user_id: str, view: str):
@@ -51,9 +51,9 @@ class ViewController(Database):
         if not pq_view and not absolute_view:
             return {'msg': '尚未設定觀點矩陣'}
         elif pq_view:
-            return {'msg': json.dumps(pq_view['view'], ensure_ascii=False).replace("\\", '')}
+            return {'msg': json.dumps(pq_view[0]['view'], ensure_ascii=False).replace("\\", '')}
         elif absolute_view:
-            return {'msg': json.dumps(absolute_view['view'], ensure_ascii=False).replace("\\", '')}
+            return {'msg': json.dumps(absolute_view[0]['view'], ensure_ascii=False).replace("\\", '')}
 
     def delete_person(self, user_id: str, table: str) -> None:
         super().deleter(table=table, cols=['user_id'], vals=[user_id])

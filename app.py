@@ -3,8 +3,8 @@ import warnings
 
 from controller.user_controller import UserController
 from controller.stock_controller import StockController
-import controller.view_controller as view_controller
-import controller.confidence_controller as confidence_controller
+from controller.view_controller import ViewController
+from controller.confidence_controller import ConfidenceController
 
 import module.black_litterman as black_litterman
 
@@ -64,10 +64,15 @@ def handle_message(event):
     res = {
         'msg': "指令無效"
     }
+
     stock_controller = StockController()
+    view_controller = ViewController()
+    confidence_controller = ConfidenceController()
+
     if "@指令清單" in event.message.text:
-        commands = ["@指令清單：", "@關注清單", "\t@關注清單+", "\t@關注清單-", "@觀點矩陣", "\t@觀點矩陣-絕對",
-                    "\t@觀點矩陣-相對"]
+        commands = ["@指令清單：", "@關注清單", "\t@關注清單+", "\t@關注清單-", "@觀點矩陣", "\t@觀點矩陣-絕對模板",
+                    "\t@觀點矩陣-相對模板", "\t@觀點矩陣-絕對輸入", "\t@觀點矩陣-相對輸入", "@置信矩陣", "\t@置信矩陣-模板", "\t@置信矩陣-輸入"
+                    , "@置信區間", "\t@置信區間-模板", "\t@置信區間-輸入", "@策略", "\t@策略一", "\t@策略二", "\t@策略三", "\t@策略四"]
         res['msg'] = '\n'.join(commands)
 
     elif "@關注清單+" in event.message.text:
@@ -106,13 +111,14 @@ def handle_message(event):
     elif "@置信區間" in event.message.text:
         res = confidence_controller.read_interval(event.source.user_id)
     elif "@策略一" in event.message.text:
-        res = black_litterman.check_one(event.source.user_id)
+        res = black_litterman.check_one(event.source.user_id, stock_controller, view_controller)
     elif "@策略二" in event.message.text:
-        res = black_litterman.check_two(event.source.user_id)
+        res = black_litterman.check_two(event.source.user_id, stock_controller, view_controller, confidence_controller)
     elif "@策略三" in event.message.text:
-        res = black_litterman.check_three(event.source.user_id)
+        res = black_litterman.check_three(event.source.user_id, stock_controller, view_controller,
+                                          confidence_controller)
     elif "@策略四" in event.message.text:
-        res = black_litterman.check_four(event.source.user_id)
+        res = black_litterman.check_four(event.source.user_id, stock_controller, view_controller)
     elif "@策略" in event.message.text:
         res['msg'] = "策略一\n[\n\t絕對觀點、\n\t市場指數、\n\t股票市值、\n\t股票調整後收盤價\n]\
         \n\n策略二\n[\n\t絕對觀點、\n\t市場指數、\n\t股票市值、\n\t股票調整後收盤價、\n\t置信矩陣\n]\

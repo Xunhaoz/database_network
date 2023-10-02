@@ -2,9 +2,9 @@ import json
 
 import pandas as pd
 
-import controller.confidence_controller as confidence_controller
-import controller.stock_controller as stock_controller
-import controller.view_controller as view_controller
+# from controller.confidence_controller import ConfidenceController
+# from controller.stock_controller import StockController
+# from controller.view_controller import ViewController
 
 from pypfopt import black_litterman, risk_models, BlackLittermanModel
 from pypfopt import EfficientFrontier, objective_functions
@@ -13,12 +13,12 @@ import numpy as np
 import yfinance as yf
 
 
-def check_one(user_id: str):
-    stock_result = stock_controller.select_person(user_id)
+def check_one(user_id: str, stock_controller, view_controller):
+    stock_result = stock_controller.selector(table='stock', cols=['user_id'], vals=[user_id])
     if len(stock_result) < 3:
         return {'msg': "選取的股票支數過少"}
 
-    view_result = view_controller.select_person(user_id, 'absolute_view')
+    view_result = view_controller.selector(table='absolute_view', cols=['user_id'], vals=[user_id])[0]
     if not view_result:
         return {'msg': "尚未設定觀點矩陣-絕對"}
 
@@ -27,7 +27,7 @@ def check_one(user_id: str):
     market_prices = yf.download("SPY", period="max")["Adj Close"]
     mcaps = {_[2]: yf.Ticker(_[2]).info["marketCap"] for _ in stock_result}
 
-    view_result = json.loads(view_result['view'])
+    view_result = view_result['view']
     ret_bl, S_bl = cal_black_litterman(prices=prices, market_prices=market_prices, mcaps=mcaps,
                                        absolute_views=view_result)
     res = cal_profolio_allocation(ret_bl, S_bl)
@@ -35,22 +35,22 @@ def check_one(user_id: str):
     return {'msg': "\n".join(res)}
 
 
-def check_two(user_id: str):
-    stock_result = stock_controller.select_person(user_id)
+def check_two(user_id: str, stock_controller, view_controller, confidence_controller):
+    stock_result = stock_controller.selector(table='stock', cols=['user_id'], vals=[user_id])
     if len(stock_result) < 3:
         return {'msg': "選取的股票支數過少"}
 
-    view_result = view_controller.select_person(user_id, 'absolute_view')
+    view_result = view_controller.selector(table='absolute_view', cols=['user_id'], vals=[user_id])[0]
     if not view_result:
         return {'msg': "尚未設定絕對觀點矩陣-絕對"}
 
-    confidence_result = confidence_controller.select_person(user_id, 'confidences')
+    confidence_result = confidence_controller.selector(table='confidences', cols=['user_id'], vals=[user_id])[0]
     if not confidence_result:
         return {'msg': "尚未設定置信矩陣"}
 
     prices = price_processing(stock_result)
-    view_result = json.loads(view_result['view'])
-    confidence_result = json.loads(confidence_result['confidences'])
+    view_result = view_result['view']
+    confidence_result = confidence_result['confidence']
 
     market_prices = yf.download("SPY", period="max")["Adj Close"]
     mcaps = {_[2]: yf.Ticker(_[2]).info["marketCap"] for _ in stock_result}
@@ -62,22 +62,22 @@ def check_two(user_id: str):
     return {'msg': "\n".join(res)}
 
 
-def check_three(user_id: str):
-    stock_result = stock_controller.select_person(user_id)
+def check_three(user_id: str, stock_controller, view_controller, confidence_controller):
+    stock_result = stock_controller.selector(table='stock', cols=['user_id'], vals=[user_id])
     if len(stock_result) < 3:
         return {'msg': "選取的股票支數過少"}
 
-    view_result = view_controller.select_person(user_id, 'absolute_view')
+    view_result = view_controller.selector(table='absolute_view', cols=['user_id'], vals=[user_id])[0]
     if not view_result:
         return {'msg': "尚未設定絕對觀點矩陣-絕對"}
 
-    confidence_result = confidence_controller.select_person(user_id, 'interval')
+    confidence_result = confidence_controller.selector(table='interval', cols=['user_id'], vals=[user_id])[0]
     if not confidence_result:
         return {'msg': "尚未設定置信區間"}
 
     prices = price_processing(stock_result)
-    view_result = json.loads(view_result['view'])
-    confidence_result = json.loads(confidence_result['confidences'])
+    view_result = view_result['view']
+    confidence_result = confidence_result['confidence']
 
     variances = []
     for lb, ub in confidence_result['intervals']:
@@ -95,20 +95,19 @@ def check_three(user_id: str):
     return {'msg': "\n".join(res)}
 
 
-def check_four(user_id: str):
-    stock_result = stock_controller.select_person(user_id)
+def check_four(user_id: str, stock_controller, view_controller):
+    stock_result = stock_controller.selector(table='stock', cols=['user_id'], vals=[user_id])
     if len(stock_result) < 3:
         return {'msg': "選取的股票支數過少"}
 
-    view_result = view_controller.select_person(user_id, 'pq_view')
+    view_result = view_controller.selector(table='pq_view', cols=['user_id'], vals=[user_id])[0]
     if not view_result:
         return {'msg': "尚未設定相對觀點矩陣-相對"}
 
     prices = price_processing(stock_result)
-    view_result = json.loads(view_result['view'])
+    view_result = view_result['view']
     P = np.array(view_result['P'])
     Q = np.array(view_result['Q']).reshape(-1, 1)
-
 
     market_prices = yf.download("SPY", period="max")["Adj Close"]
     mcaps = {_[2]: yf.Ticker(_[2]).info["marketCap"] for _ in stock_result}

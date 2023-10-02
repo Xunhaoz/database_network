@@ -120,3 +120,4 @@ class StockController(Database):
         result = {'intervals': [[0.0, 0.0] for _ in result]}
         res = {'msg': "@置信區間-輸入\n" + json.dumps(result, ensure_ascii=False)}
         return res
+
